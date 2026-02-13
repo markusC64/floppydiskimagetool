@@ -14,12 +14,12 @@ Generated a bitstream image template
 
 ### CfgSet
 ```
-New-FloppyDiskTemplate -Configration <RawFormatDescription> [<CommonParameters>]
+New-FloppyDiskTemplate -Configration <RawFormatDescription> [-id <Byte[]>] [<CommonParameters>]
 ```
 
 ### FloppySet
 ```
-New-FloppyDiskTemplate -Floppy <Floppies> [-GeosGaps <Boolean>] [<CommonParameters>]
+New-FloppyDiskTemplate -Floppy <Floppies> [-GeosGaps <Boolean>] [-id <Byte[]>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -73,6 +73,21 @@ Use Geos Gaps. Only valid for GCR disks.
 ```yaml
 Type: Boolean
 Parameter Sets: FloppySet
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -id
+{{ Fill id Description }}
+
+```yaml
+Type: Byte[]
+Parameter Sets: (All)
 Aliases:
 
 Required: False

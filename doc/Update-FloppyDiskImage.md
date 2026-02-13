@@ -24,6 +24,11 @@ Update-FloppyDiskImage [-Passthru] [-FixRotationsFluxDump] -FluxDumpImage <Abstr
  [<CommonParameters>]
 ```
 
+### WriteSectorToBitstream
+```
+Update-FloppyDiskImage -BitStreamImage <GxxImageV1> -WriteSectorToBitstream <Block> [<CommonParameters>]
+```
+
 ## DESCRIPTION
 Allows padding of GCR bitstreams and fixing rotations in flux dump images. Use -Passthru to return the processed object.
 
@@ -43,7 +48,7 @@ The BitStream Image to process
 
 ```yaml
 Type: GxxImageV1
-Parameter Sets: PadGCRBitstream
+Parameter Sets: PadGCRBitstream, WriteSectorToBitstream
 Aliases:
 
 Required: True
@@ -103,10 +108,25 @@ Returns the updated object
 
 ```yaml
 Type: SwitchParameter
-Parameter Sets: (All)
+Parameter Sets: PadGCRBitstream, FixRotationsFluxDump
 Aliases:
 
 Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -WriteSectorToBitstream
+{{ Fill WriteSectorToBitstream Description }}
+
+```yaml
+Type: Block
+Parameter Sets: WriteSectorToBitstream
+Aliases:
+
+Required: True
 Position: Named
 Default value: None
 Accept pipeline input: False

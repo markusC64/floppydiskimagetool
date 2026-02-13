@@ -20,7 +20,8 @@ Convert-FloppyDiskImage [-BitstreamToText] -BitStreamImage <GxxImageV1>
 
 ### TextToBitstream
 ```
-Convert-FloppyDiskImage [-TextToBitstream] -Text <TextualRepresentation> [<CommonParameters>]
+Convert-FloppyDiskImage [-TextToBitstream] -Text <TextualRepresentation> [-Floppy <String>]
+ [<CommonParameters>]
 ```
 
 ### BitstreamToFlux
@@ -34,15 +35,15 @@ Convert-FloppyDiskImage [-FluxToBitstream] -FLuxImage <P64File> [-Use8250SpeedZo
  [-SpeedDetector <ISpeedDetector>] [<CommonParameters>]
 ```
 
-### TemplateToTextSetFile
-```
-Convert-FloppyDiskImage [-TemplateToText] -Text <TextualRepresentation> -DataFilename <String>
- [<CommonParameters>]
-```
-
 ### TemplateToTextSetDxx
 ```
 Convert-FloppyDiskImage [-TemplateToText] -Text <TextualRepresentation> -SourceDxx <AbstractCommodoreDisk>
+ [<CommonParameters>]
+```
+
+### TemplateToTextSetFile
+```
+Convert-FloppyDiskImage [-TemplateToText] -Text <TextualRepresentation> -DataFilename <String>
  [<CommonParameters>]
 ```
 
@@ -175,7 +176,7 @@ In case of "8050", "8250" abd "1001", flux resoltion is the one of the commodore
 
 ```yaml
 Type: String
-Parameter Sets: FluxDumpToFluxRotDec, FluxDumpToFluxRot
+Parameter Sets: TextToBitstream, FluxDumpToFluxRotDec, FluxDumpToFluxRot
 Aliases:
 
 Required: False
@@ -357,7 +358,7 @@ a bitstream
 
 ```yaml
 Type: SwitchParameter
-Parameter Sets: TemplateToTextSetFile, TemplateToTextSetDxx
+Parameter Sets: TemplateToTextSetDxx, TemplateToTextSetFile
 Aliases:
 
 Required: True
@@ -372,7 +373,7 @@ Input textual disk representation
 
 ```yaml
 Type: TextualRepresentation
-Parameter Sets: TextToBitstream, TemplateToTextSetFile, TemplateToTextSetDxx
+Parameter Sets: TextToBitstream, TemplateToTextSetDxx, TemplateToTextSetFile
 Aliases:
 
 Required: True

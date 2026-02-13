@@ -268,3 +268,116 @@ function Convert-GxMToDxM {
         return $dxm
     }
 }
+
+function Update-G64ToDoubleSided {
+ [CmdletBinding()]
+ param (
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [object]$g64,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$Passthru     # Gibt das aktualisierte G64-Objekt zurück, falls dieser Schalter gesetzt ist
+ )
+ process {
+
+   $trackdata = $g64 | Read-FloppyDiskImageTrack -TracknumberingStyle Commodore1541 -Track 18 -side 0
+   $block18sec0 = $trackdata | Where-Object { $_.track -eq 18 -and $_.sector -eq 0 }
+
+   if (-not $block18sec0) {
+       throw "BAM sector (Track 18 / Sector 0) not found in image"
+   }
+
+   if ($block18sec0.Count -ne 1) {
+       throw "Expected exactly one BAM sector, found $($block18sec0.Count)"
+   }
+
+   $block18sec0 = $block18sec0[0]
+
+   if ($block18sec0.errorCode -ne 1) {
+       throw "BAM sector read error (Track 18 / Sector 0), errorCode=$($block18sec0.errorCode)"
+   }
+
+   $block18sec0content = $block18sec0.data
+
+   if ($null -eq $block18sec0content) {
+       throw "BAM sector data is null (Track 18 / Sector 0)"
+   }
+
+   if ($block18sec0content.Count -ne 256) {
+       throw "BAM sector has invalid size: $($block18sec0content.Length) bytes (expected 256)"
+   }
+
+   # Modify the BAM sector data for D71
+   $block18sec0content[3] = 0x80
+
+   $index = 0xDD
+
+   1..17 | ForEach-Object {
+       $block18sec0content[$index] = 0x15
+       $index++
+   }
+
+   $block18sec0content[$index] = 0x00
+   $index++
+
+   1..6 | ForEach-Object {
+       $block18sec0content[$index] = 0x13
+       $index++
+   }
+
+   1..6 | ForEach-Object {
+       $block18sec0content[$index] = 0x12
+       $index++
+   }
+
+   1..5 | ForEach-Object {
+       $block18sec0content[$index] = 0x11
+       $index++
+   }
+   $block18sec0.data = $block18sec0content
+
+   Update-FloppyDiskImage -BitStreamImage $g64 -WriteSectorToBitstream $block18sec0
+
+   $d71 = Get-FloppyDiskImage -SectorImage -SectorImageType D71 -clear
+   $tr53sec0 = $d71.readSector(53,0)
+   $index = 0
+
+   # Definiere die Werte und die Anzahl der Wiederholungen
+   $pattern = @(
+       @{ Value = 0xFF; Count = 34 },
+       @{ Value = 0x1F; Count = 17 },
+       @{ Value = 0x00; Count = 3 },
+       @{ Value = 0xFF; Count = 34 },
+       @{ Value = 0x07; Count = 6 },
+       @{ Value = 0xFF; Count = 34 },
+       @{ Value = 0x03; Count = 6 },
+       @{ Value = 0xFF; Count = 34 },
+       @{ Value = 0x01; Count = 5 }
+   )
+
+   # Durchlaufe die Muster und füge die entsprechenden Werte zum Array hinzu
+   foreach ($entry in $pattern) {
+       for ($i = 0; $i -lt $entry.Count; $i++) {
+           $tr53sec0[$index++] = $entry.Value
+       }
+   }
+
+   $tr53sec0.write()
+
+   $g71 = New-FloppyDiskTemplate -Floppy floppy1571 -id ($block18sec0.id1),($block18sec0.id2) | Convert-FloppyDiskImage -TemplateToText -SourceDxx $d71 | Convert-FloppyDiskImage -TextToBitstream
+
+   $g64.Identifier = "1571"
+   $g64.MaxTracks = 168
+
+   for ($i = 0; $i -le 84; $i++) {
+       $trackNumber = 2 * $i + 1
+       if ($g71.tracks.ContainsKey($trackNumber)) {
+           $g64.tracks[$trackNumber] = $g71.tracks[$trackNumber]
+       }
+   }
+
+   if ($Passthru) {
+      return $g64
+   }
+ }
+}

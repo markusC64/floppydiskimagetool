@@ -367,11 +367,12 @@ PS C:\&gt; $d81 = Convert-G81ToD81 -g81Image $g81</dev:code>
       <command:verb>Convert</command:verb>
       <command:noun>GxMToDxM</command:noun>
       <maml:description>
-        <maml:para>{{ Fill in the Synopsis }}</maml:para>
+        <maml:para>Converts a G1M,G2M or G4M disk image object to a D?M disk image object.</maml:para>
       </maml:description>
     </command:details>
     <maml:description>
-      <maml:para>{{ Fill in the Description }}</maml:para>
+      <maml:para>Converts a G1M,G2M or G4M disk image object to a D?M disk image object.</maml:para>
+      <maml:para>Cf Convert-G81ToD81 for Details</maml:para>
     </maml:description>
     <command:syntax>
       <command:syntaxItem>

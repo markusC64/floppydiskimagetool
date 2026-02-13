@@ -17,10 +17,21 @@ Reads a Floppy disk image from disk and returns it as an object.
 Get-FloppyDiskImage [-Text] -Filename <String> [<CommonParameters>]
 ```
 
+### PartitionSet
+```
+Get-FloppyDiskImage -Partition <PartitiontableEntry> [-returnFilesystem] [<CommonParameters>]
+```
+
+### SectorImageFactorySet
+```
+Get-FloppyDiskImage [-SectorImage] -Filename <String> [-useFactory] [-returnFilesystem] [-returnPartitionTable]
+ [<CommonParameters>]
+```
+
 ### SectorImageSet
 ```
-Get-FloppyDiskImage [-SectorImage] [-Filename <String>] -SectorImageType <SectorImageTypes> [-useFactory]
- [-noTracks <Int32>] [<CommonParameters>]
+Get-FloppyDiskImage [-SectorImage] [-Filename <String>] -SectorImageType <SectorImageTypes> [-noTracks <Int32>]
+ [-clear] [<CommonParameters>]
 ```
 
 ### BitstreamSet
@@ -121,7 +132,7 @@ The filename of the image. In case of kryoflux imagesany single file of the imag
 
 ```yaml
 Type: String
-Parameter Sets: TextSet, BitstreamSet, FluxSet, KryofluxImageSetFilename, SCPImageSet
+Parameter Sets: TextSet, SectorImageFactorySet, BitstreamSet, FluxSet, KryofluxImageSetFilename, SCPImageSet
 Aliases:
 
 Required: True
@@ -193,7 +204,7 @@ Tells the system you want to read a sector image.
 
 ```yaml
 Type: SwitchParameter
-Parameter Sets: SectorImageSet
+Parameter Sets: SectorImageFactorySet, SectorImageSet
 Aliases:
 
 Required: True
@@ -283,11 +294,71 @@ Accept wildcard characters: False
 ```
 
 ### -useFactory
-WIP - not ready in this alpha.
+Use the factory to create the image
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: SectorImageFactorySet
+Aliases:
+
+Required: True
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -clear
+Empty the image
 
 ```yaml
 Type: SwitchParameter
 Parameter Sets: SectorImageSet
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Partition
+Create the image from a partition table entry, that is a partition
+
+```yaml
+Type: PartitiontableEntry
+Parameter Sets: PartitionSet
+Aliases:
+
+Required: True
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -returnFilesystem
+returns a file system object
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: PartitionSet, SectorImageFactorySet
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -returnPartitionTable
+returns a partition table object
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: SectorImageFactorySet
 Aliases:
 
 Required: False

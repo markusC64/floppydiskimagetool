@@ -78,7 +78,7 @@ CmdletsToExport = 'Convert-FloppyDiskImage', 'Export-FloppyDiskImage',
                'New-FloppyDiskTemplate', 'Read-FloppyDiskImageTrack',
                'function Find-ErrorsInDxx',
                'Convert-G64resp71ToDxx', 'Convert-G81ToD81', 'Convert-GxMToDxM',
-               'Convert-G80resp82ToDxx'
+               'Convert-G80resp82ToDxx', 'Update-G64ToDoubleSided'
 
 # Variables to export from this module
 VariablesToExport = '*'
