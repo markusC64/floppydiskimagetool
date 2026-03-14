@@ -89,7 +89,7 @@ function Convert-G64resp71ToDxx {
     param (
         [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
         [Object]$g64Image,
-        [int[]]$tracks = (1..35),
+        [double[]]$tracks = (1..35),
         [int]$numTracks = 35
     )
 
