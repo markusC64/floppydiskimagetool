@@ -17,6 +17,12 @@ schema: 2.0.0
 New-FloppyDiskImageConfiguration [-RotationDecider] [-Rotation <Int32>] [<CommonParameters>]
 ```
 
+### MultispeedOptions
+```
+New-FloppyDiskImageConfiguration [-Multispeed] -TrackConfig <Hashtable>
+ -TracknumberingStyle <TracknumberingStyle> [<CommonParameters>]
+```
+
 ### SpeedDetector
 ```
 New-FloppyDiskImageConfiguration [-SpeedDetector] [-SpeedZone <Int32>] [-SpeedZoneType <SpeedZoneTypes>]
@@ -26,7 +32,7 @@ New-FloppyDiskImageConfiguration [-SpeedDetector] [-SpeedZone <Int32>] [-SpeedZo
 ### Bitstream2TextOptions
 ```
 New-FloppyDiskImageConfiguration [-Bitstream2TextOptions] [-Bitstream2TextFormat <TextOptionsFormat>]
- [<CommonParameters>]
+ [-MultilineData] [-RawDataComment] [<CommonParameters>]
 ```
 
 ### GCRTemplateOptions
@@ -256,6 +262,81 @@ Aliases:
 Accepted values: none, cbm1571, cbm1571NoHalfTracks, cbm8250
 
 Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -MultilineData
+{{ Fill MultilineData Description }}
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: Bitstream2TextOptions
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Multispeed
+{{ Fill Multispeed Description }}
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: MultispeedOptions
+Aliases:
+
+Required: True
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -RawDataComment
+{{ Fill RawDataComment Description }}
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: Bitstream2TextOptions
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -TrackConfig
+{{ Fill TrackConfig Description }}
+
+```yaml
+Type: Hashtable
+Parameter Sets: MultispeedOptions
+Aliases:
+
+Required: True
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -TracknumberingStyle
+{{ Fill TracknumberingStyle Description }}
+
+```yaml
+Type: TracknumberingStyle
+Parameter Sets: MultispeedOptions
+Aliases:
+
+Required: True
 Position: Named
 Default value: None
 Accept pipeline input: False

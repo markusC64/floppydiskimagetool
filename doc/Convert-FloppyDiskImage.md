@@ -32,7 +32,7 @@ Convert-FloppyDiskImage [-BitstreamToFlux] -BitStreamImage <GxxImageV1> [-HighRe
 ### FluxToBitstream
 ```
 Convert-FloppyDiskImage [-FluxToBitstream] -FLuxImage <P64File> [-Use8250SpeedZones]
- [-SpeedDetector <ISpeedDetector>] [<CommonParameters>]
+ [-SpeedDetector <ISpeedDetector>] [-MultispeedDecider <IMultispeedDecider>] [<CommonParameters>]
 ```
 
 ### TemplateToTextSetDxx
@@ -403,6 +403,21 @@ Assume speedzones returned by speed detector are commodore 8250 speed zones when
 
 ```yaml
 Type: SwitchParameter
+Parameter Sets: FluxToBitstream
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -MultispeedDecider
+{{ Fill MultispeedDecider Description }}
+
+```yaml
+Type: IMultispeedDecider
 Parameter Sets: FluxToBitstream
 Aliases:
 

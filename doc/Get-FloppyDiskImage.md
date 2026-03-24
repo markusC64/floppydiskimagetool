@@ -22,16 +22,16 @@ Get-FloppyDiskImage [-Text] -Filename <String> [<CommonParameters>]
 Get-FloppyDiskImage -Partition <PartitiontableEntry> [-returnFilesystem] [<CommonParameters>]
 ```
 
-### SectorImageFactorySet
-```
-Get-FloppyDiskImage [-SectorImage] -Filename <String> [-useFactory] [-returnFilesystem] [-returnPartitionTable]
- [<CommonParameters>]
-```
-
 ### SectorImageSet
 ```
 Get-FloppyDiskImage [-SectorImage] [-Filename <String>] -SectorImageType <SectorImageTypes> [-noTracks <Int32>]
  [-clear] [<CommonParameters>]
+```
+
+### SectorImageFactorySet
+```
+Get-FloppyDiskImage [-SectorImage] -Filename <String> [-useFactory] [-returnFilesystem] [-returnPartitionTable]
+ [<CommonParameters>]
 ```
 
 ### BitstreamSet
@@ -44,14 +44,14 @@ Get-FloppyDiskImage [-Bitstream] [-useClassicG64ConvFormat] -Filename <String> [
 Get-FloppyDiskImage [-Flux] -Filename <String> [<CommonParameters>]
 ```
 
-### KryofluxImageSetBasename
-```
-Get-FloppyDiskImage [-KryofluxImage] [-Sides <Sides>] [-DoubleStep] -Basename <String> [<CommonParameters>]
-```
-
 ### KryofluxImageSetFilename
 ```
 Get-FloppyDiskImage [-KryofluxImage] [-Sides <Sides>] [-DoubleStep] -Filename <String> [<CommonParameters>]
+```
+
+### KryofluxImageSetBasename
+```
+Get-FloppyDiskImage [-KryofluxImage] [-Sides <Sides>] [-DoubleStep] -Basename <String> [<CommonParameters>]
 ```
 
 ### SCPImageSet
@@ -117,7 +117,7 @@ Reads only every second track
 
 ```yaml
 Type: SwitchParameter
-Parameter Sets: KryofluxImageSetBasename, KryofluxImageSetFilename
+Parameter Sets: KryofluxImageSetFilename, KryofluxImageSetBasename
 Aliases:
 
 Required: False
@@ -174,7 +174,7 @@ Tells the system you want to read a kryoflux image. You'll get a FLuxDump object
 
 ```yaml
 Type: SwitchParameter
-Parameter Sets: KryofluxImageSetBasename, KryofluxImageSetFilename
+Parameter Sets: KryofluxImageSetFilename, KryofluxImageSetBasename
 Aliases:
 
 Required: True
@@ -204,7 +204,7 @@ Tells the system you want to read a sector image.
 
 ```yaml
 Type: SwitchParameter
-Parameter Sets: SectorImageFactorySet, SectorImageSet
+Parameter Sets: SectorImageSet, SectorImageFactorySet
 Aliases:
 
 Required: True
@@ -235,7 +235,7 @@ Specifies sides to read for kryoflux image.
 
 ```yaml
 Type: Sides
-Parameter Sets: KryofluxImageSetBasename, KryofluxImageSetFilename
+Parameter Sets: KryofluxImageSetFilename, KryofluxImageSetBasename
 Aliases:
 Accepted values: sideA, sideB, bothSides
 

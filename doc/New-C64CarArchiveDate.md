@@ -1,24 +1,31 @@
 ---
-external help file: FloppyDiskImageTool-help.xml
+external help file: CommodoreDiskImageTool.dll-Help.xml
 Module Name: FloppyDiskImageTool
 online version:
 schema: 2.0.0
 ---
 
-# ConvertFrom-Kryoflux
+# New-C64CarArchiveDate
 
 ## SYNOPSIS
-{{ Fill in the Synopsis }}
+Creates an object representing the creation date of a car file
 
 ## SYNTAX
 
+### value
 ```
-ConvertFrom-Kryoflux [-srcKryofluxImage] <String> [[-dstG64] <String>] [-dstP64 <ParameterAttribute>]
- [-rotation <Object>] [-side <Sides>] [-doubleStep <Boolean>] [-floppy <String>] [<CommonParameters>]
+New-C64CarArchiveDate -Year <Byte> -Month <Byte> -Day <Byte> -Hour <Byte> -Minute <Byte> [<CommonParameters>]
+```
+
+### now
+```
+New-C64CarArchiveDate [-Now] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
-{{ Fill in the Description }}
+Creates an object representing the creation date of a car file
+
+See New-C64CarArchive for an example.
 
 ## EXAMPLES
 
@@ -31,107 +38,91 @@ PS C:\> {{ Add example code here }}
 
 ## PARAMETERS
 
-### -doubleStep
-{{ Fill doubleStep Description }}
+### -Day
+The actual day
 
 ```yaml
-Type: Boolean
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -dstG64
-{{ Fill dstG64 Description }}
-
-```yaml
-Type: String
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: 1
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -dstP64
-{{ Fill dstP64 Description }}
-
-```yaml
-Type: ParameterAttribute
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -floppy
-{{ Fill floppy Description }}
-
-```yaml
-Type: String
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -rotation
-{{ Fill rotation Description }}
-
-```yaml
-Type: Object
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -side
-{{ Fill side Description }}
-
-```yaml
-Type: Sides
-Parameter Sets: (All)
-Aliases:
-Accepted values: sideA, sideB, bothSides
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -srcKryofluxImage
-{{ Fill srcKryofluxImage Description }}
-
-```yaml
-Type: String
-Parameter Sets: (All)
+Type: Byte
+Parameter Sets: value
 Aliases:
 
 Required: True
-Position: 0
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Hour
+The actual Hour
+
+```yaml
+Type: Byte
+Parameter Sets: value
+Aliases:
+
+Required: True
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Minute
+The actual Minute
+
+```yaml
+Type: Byte
+Parameter Sets: value
+Aliases:
+
+Required: True
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Month
+The actual month
+
+```yaml
+Type: Byte
+Parameter Sets: value
+Aliases:
+
+Required: True
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Now
+Create an object using the current timestamp
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: now
+Aliases:
+
+Required: True
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Year
+The actual year minus 1900
+
+```yaml
+Type: Byte
+Parameter Sets: value
+Aliases:
+
+Required: True
+Position: Named
 Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
@@ -143,10 +134,9 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## INPUTS
 
 ### None
-
 ## OUTPUTS
 
-### System.Object
+### CommodoreDisk.Archive.car.carDateTime
 ## NOTES
 
 ## RELATED LINKS

@@ -13,7 +13,7 @@ Converts a G64 or G71 bitstream image object to a compatible sector image object
 ## SYNTAX
 
 ```
-Convert-G64resp71ToDxx [-g64Image] <Object> [[-tracks] <Int32[]>] [[-numTracks] <Int32>] [<CommonParameters>]
+Convert-G64resp71ToDxx [-g64Image] <Object> [[-tracks] <Double[]>] [[-numTracks] <Int32>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -82,7 +82,7 @@ Accept wildcard characters: False
 An array of track numbers to convert from the bitstream image. Defaults to 1..35.
 
 ```yaml
-Type: Int32[]
+Type: Double[]
 Parameter Sets: (All)
 Aliases:
 

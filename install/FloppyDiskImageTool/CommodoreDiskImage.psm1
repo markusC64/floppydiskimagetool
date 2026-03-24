@@ -381,3 +381,481 @@ function Update-G64ToDoubleSided {
    }
  }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+        function Get-DriveQualifiedPath {
+            param(
+                [Parameter(Mandatory)]
+                $Item
+            )
+
+            if ($Item.PSDrive -and $Item.PSObject.Properties.Match('Path').Count -gt 0) {
+                return '{0}:{1}' -f $Item.PSDrive.Name, $Item.Path
+            }
+
+            return $Item.PSPath
+        }
+
+        function New-CallbackContext {
+            param(
+                [string]$Path,
+                $Item,
+                [string]$ParentPath,
+                $ParentItem,
+                [int]$Depth,
+                $CurrentContainer,
+                $ParentContainer,
+                $ChildItem,
+                [string]$ChildPath,
+                $Content
+            )
+
+            [pscustomobject]@{
+                Path             = $Path
+                Item             = $Item
+                ParentPath       = $ParentPath
+                ParentItem       = $ParentItem
+                Depth            = $Depth
+                CurrentContainer = $CurrentContainer
+                ParentContainer  = $ParentContainer
+                ChildItem        = $ChildItem
+                ChildPath        = $ChildPath
+                Content          = $Content
+            }
+        }
+
+        function Get-DebugIndent {
+            param([int]$Depth)
+            '  ' * $Depth
+        }
+
+
+function Invoke-RecursiveItemWalkInternal {
+    [CmdletBinding()]
+    param(
+        [Parameter(Position = 0)]
+        [string]$Path = (Get-Location).Path,
+
+        [scriptblock]$OnContainerBegin,
+        [scriptblock]$OnChildItem,
+        [scriptblock]$OnContainerEnd,
+        [scriptblock]$OnLeaf,
+
+        [Parameter(DontShow)]
+        $CurrentContainer,
+
+        [Parameter(DontShow)]
+        [int]$Depth = 0
+    )
+
+    process {
+        $indent = Get-DebugIndent -Depth $Depth
+        Write-Debug "${indent}Resolve item: $Path"
+
+        $item = Get-Item -LiteralPath $Path
+        Write-Debug ("{0}Resolved: Name='{1}', IsContainer={2}" -f $indent, $item.Name, $item.IsContainer)
+
+        if ($item.IsContainer) {
+            $thisContainer = $null
+
+            if ($OnContainerBegin) {
+                Write-Debug "${indent}Invoke OnContainerBegin: $Path"
+
+                $context = New-CallbackContext `
+                    -Path $Path `
+                    -Item $item `
+                    -Depth $Depth
+
+                $result = (& $OnContainerBegin $context)
+                
+                if ($null -ne $result) {
+                    $thisContainer = $result
+                }
+            }
+
+            if ($OnContainerEnd -or $OnContainerBegin) {
+                Write-Debug ("{0}Container object: {1}" -f $indent, $(if ($null -eq $thisContainer) { '<null>' } else { $thisContainer.GetType().FullName }))
+            }
+
+            foreach ($childItem in (Get-ChildItem -LiteralPath $Path)) {
+                $childPath = Get-DriveQualifiedPath -Item $childItem
+
+                Write-Debug ("{0}Child: Name='{1}', Path='{2}', IsContainer={3}" -f $indent, $childItem.Name, $childPath, $childItem.IsContainer)
+
+                if ($OnChildItem) {
+                    Write-Debug "${indent}Invoke OnChildItem: $childPath"
+
+                    $context = New-CallbackContext `
+                        -Path $Path `
+                        -Item $item `
+                        -Depth $Depth `
+                        -CurrentContainer $thisContainer `
+                        -ChildItem $childItem `
+                        -ChildPath $childPath
+
+                    & $OnChildItem $context
+                }
+
+                Write-Debug "${indent}Recurse into: $childPath"
+
+                $recursiveParams = @{
+                    Path             = $childPath
+                    OnContainerBegin = $OnContainerBegin
+                    OnChildItem      = $OnChildItem
+                    OnContainerEnd   = $OnContainerEnd
+                    OnLeaf           = $OnLeaf
+                    CurrentContainer = $thisContainer
+                    Depth            = $Depth + 1
+                }
+
+                #if ($PSBoundParameters.ContainsKey('Debug')) {
+                #    $recursiveParams['Debug'] = $true
+                #}
+
+                Invoke-RecursiveItemWalkInternal @recursiveParams
+            }
+
+            if ($OnContainerEnd) {
+                Write-Debug "${indent}Invoke OnContainerEnd: $Path"
+
+                $context = New-CallbackContext `
+                    -Path $Path `
+                    -Item $item `
+                    -Depth $Depth `
+                    -CurrentContainer $thisContainer `
+                    -ParentContainer $CurrentContainer
+
+                $endResult = (& $OnContainerEnd $context)
+            }
+
+            Write-Debug "${indent}Leave container: $Path"
+            return
+        }
+
+        Write-Debug "${indent}Process leaf: $Path"
+
+        $content = $null
+        try {
+            Write-Debug "${indent}Read content: $Path"
+            $content = Get-Content -LiteralPath $Path -ErrorAction Stop
+        }
+        catch {
+            Write-Debug ("{0}Get-Content failed for '{1}': {2}" -f $indent, $Path, $_.Exception.Message)
+        }
+
+        if ($OnLeaf) {
+            Write-Debug "${indent}Invoke OnLeaf: $Path"
+
+            $context = New-CallbackContext `
+                -Path $Path `
+                -Item $item `
+                -Depth $Depth `
+                -CurrentContainer $CurrentContainer `
+                -Content $content
+
+            & $OnLeaf $context
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+function Invoke-RecursiveItemWalk {
+    [CmdletBinding()]
+    param(
+        [Parameter(Position = 0)]
+        [string]$Path = (Get-Location).Path,
+
+        [scriptblock]$OnPreparation,
+
+        [scriptblock]$OnContainerBegin,
+        [scriptblock]$OnChildItem,
+        [scriptblock]$OnContainerEnd,
+        [scriptblock]$OnLeaf,
+
+        [scriptblock]$OnFinalization
+    )
+
+    process {
+        Write-Debug "Validate root path: $Path"
+
+        $rootContainer = $null
+
+        if ( $null -ne $OnPreparation ) {
+           Write-Debug "Caling OnPreparation"
+           $rootContainer = (& $OnPreparation -Path $path)
+        }
+
+        Write-Debug "Start recursive walk below root: $Path"
+
+        $recursiveParams = @{
+                Path             = $Path
+                OnContainerBegin = $OnContainerBegin
+                OnChildItem      = $OnChildItem
+                OnContainerEnd   = $OnContainerEnd
+                OnLeaf           = $OnLeaf
+                CurrentContainer  = $rootContainer
+                Depth            = 0
+        }
+
+        #if ($PSBoundParameters.ContainsKey('Debug')) {
+        #        $recursiveParams['Debug'] = $true
+        #}
+
+        Invoke-RecursiveItemWalkInternal @recursiveParams
+
+       $finalContext = @{
+            Path          = $Path
+            RootContainer = $rootContainer
+        }
+
+        if ($OnFinalization) {
+           Write-Debug "Invoke OnFinalization: $Path"
+           return (& $OnFinalization @finalContext)
+        }
+    }
+}
+
+
+
+
+
+
+
+function New-CarDateTimeNow {
+    [CmdletBinding()]
+    param()
+
+    $now = Get-Date
+
+    if ($now.Year -lt 1900 -or $now.Year -gt 2155) {
+        throw "Das CAR-Datum unterstützt nur Jahre von 1900 bis 2155."
+    }
+
+    $dt = [CommodoreDisk.Archive.car.carDateTime]::new()
+    $dt.year   = [byte]($now.Year - 1900)
+    $dt.month  = [byte]$now.Month
+    $dt.day    = [byte]$now.Day
+    $dt.hour   = [byte]$now.Hour
+    $dt.minute = [byte]$now.Minute
+
+    return $dt
+}
+
+function New-C64CarRootCollector {
+    [CmdletBinding()]
+    param(
+        [Parameter()]
+        [string]$Path
+    )
+    
+    $dir = [CommodoreDisk.Archive.car.carDirectory]::new()
+    $dir.type = 0
+    $dir.filename = [CommodoreDisk.Archive.car.carFilename]::new()
+    $dir.childs = [System.Collections.Generic.List[CommodoreDisk.Archive.car.carfileOrDir]]::new()
+
+    return $dir
+}
+
+function New-C64CarDirectoryNode {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        $Context
+    )
+
+    $dir = [CommodoreDisk.Archive.car.carDirectory]::new()
+    $dir.type = [byte][char]'D'
+
+    $dir.filename = [CommodoreDisk.Archive.car.carFilename]::new()
+    if ( $null -ne $Context.Item.directoryEntry ) {
+       $dir.filename.asByteArray = $Context.Item.directoryEntry.filename
+       if ($Context.Item.isTopdeskSubdir) { $dir.type = [byte][char]'T' }
+    } else {
+       $dir.filename.asASCIIString = "root"
+    }
+
+    $dir.childs = [System.Collections.Generic.List[CommodoreDisk.Archive.car.carfileOrDir]]::new()
+
+    return $dir
+}
+
+function Add-C64CarLeafNode {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        $Context
+    )
+
+   Write-Debug "Executing Add-C64CarLeafNde"
+
+    if ($null -eq $Context.CurrentContainer) {
+        throw "Leaf '$($Context.Path)' hat keinen CurrentContainer."
+    }
+
+    $file = [CommodoreDisk.Archive.car.carFile]::new()
+### FIXME
+    $file.type = ($Context.Item.directoryEntry.filename.ToUpper())[-3]
+
+    $file.filename = [CommodoreDisk.Archive.car.carFilename]::new()
+    $file.filename.asByteArray = $Context.Item.directoryEntry.filename
+
+    $file.content = $Context.Content
+
+    $null = $Context.CurrentContainer.childs.Add($file)
+}
+
+function Complete-C64CarDirectoryNode {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        $Context
+    )
+
+    if ($null -ne $Context.ParentContainer) {
+        [void]$Context.ParentContainer.childs.Add($Context.CurrentContainer)
+    }
+}
+
+function Get-C64CarFromCommodoreFSProvider {
+    [CmdletBinding()]
+    param(
+        [Parameter(Position = 0)]
+        [string]$Path = (Get-Location).Path
+    )
+
+    process {
+        $resultContainer = @{ Value = $null }
+    
+        $onContainerBegin = {
+            param($Context)
+            New-C64CarDirectoryNode -Context $Context
+        }.GetNewClosure()
+
+        $onLeaf = {
+            param($Context)
+            Add-C64CarLeafNode -Context $Context
+        }.GetNewClosure()
+
+        $onFinalization = {
+            param($Path, $RootContainer)
+            $resultContainer.Value = $RootContainer
+        }.GetNewClosure()
+
+        Invoke-RecursiveItemWalk `
+            -Path $Path `
+            -OnPreparation ${function:New-C64CarRootCollector} `
+            -OnContainerBegin $onContainerBegin `
+            -OnContainerEnd ${function:Complete-C64CarDirectoryNode} `
+            -OnLeaf $onLeaf `
+            -OnFinalization $onFinalization
+
+        $archive = [CommodoreDisk.Archive.car.CarArchive]::new()
+        $archive.version   = 2
+        $archive.car_type  = "general"
+        $archive.noteASCII = 'Autogenerated'
+        $archive.date      = New-CarDateTimeNow
+        $archive.child     = $resultContainer.Value.childs[0]
+        # return $archive
+        
+        $c64 = [CommodoreDisk.Archive.car.C64Car]::new()
+        $c64.car = $archive
+        return $c64
+    }
+}
+
+
+
+function Mount-FloppyDiskImage {
+    param(
+        [Parameter(Mandatory=$true, Position=0)]
+        [string]$ImagePath,
+        
+        [Parameter(Mandatory=$true, Position=1)]
+        [string]$DriveName,
+        
+        [Parameter(Position=2)]
+        [int]$Partition = -1,
+        
+        [Parameter()]
+        [switch]$rw,
+
+        [Parameter()]
+        [switch]$UseTopdeskFolder,
+        
+        [Parameter()]
+        [switch]$UseCVT
+
+    )
+    
+    # Filesystem laden
+    if ($Partition -gt 0) {
+        $partitionTable = Get-FloppyDiskImage -sectorimage -useFactory -returnPartitionTable -Filename $ImagePath
+        $filesystem = Get-FloppyDiskImage -Partition $partitionTable[$Partition] -returnFilesystem
+    } else {
+        $filesystem = Get-FloppyDiskImage -sectorimage -useFactory -returnFilesystem -Filename $ImagePath
+    }
+    
+    # Root-Pfad
+    $root = if ($IsWindows) { "\" } else { "/" }
+    
+    # Provider wählen
+    $provider = if ($rw) { "CommodoreFSWritableProvider" } else { "CommodoreFSProvider" }
+
+    $moreParams = @{}
+    if ($UseTopdeskFolder) { $moreParams.Add("UseTopdeskFolder", $true) }
+    if ($UseCVT) { $moreParams.Add("UseCVT", $true) }
+
+
+    # PSDrive erstellen
+    New-PSDrive -Name $DriveName -PSProvider $provider -Root $root -Filesystem $filesystem -Scope Global @moreParams
+    
+    $mode = if ($rw) { "read-write" } else { "read-only" }
+    Write-Host "Mounted $ImagePath as $DriveName`: ($mode)"
+}
+
+function Dismount-FloppyDiskImage {
+    param(
+        [Parameter(Mandatory=$true, Position=0)]
+        [string]$DriveName,
+        
+        [Parameter()]
+        [string]$SaveAs
+    )
+    
+    $drive = Get-PSDrive -Name $DriveName -ErrorAction SilentlyContinue
+    if (-not $drive) {
+        Write-Error "Drive $DriveName not found"
+        return
+    }
+    
+    $image = $drive.Image
+
+    # Erst PSDrive entfernen, damit es garatiert niemand mehr ändern kann:
+    Remove-PSDrive -Name $DriveName
+    
+    # Änderungen speichern
+    if ($SaveAs) {
+        $image | Export-FloppyDiskImage -SectorImage -Filename $SaveAs
+    }
+    
+    Write-Host "Dismounted $DriveName"
+}

@@ -12,7 +12,7 @@
 RootModule = 'CommodoreDiskImage.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.0.1'
+ModuleVersion = '0.0.2'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -69,22 +69,32 @@ RequiredModules = @()
 NestedModules = @('CommodoreDiskImageTool.dll')
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = '*'
+FunctionsToExport = 'function Find-ErrorsInDxx', 'Update-G64ToDoubleSided',
+               'Convert-G64resp71ToDxx', 'Convert-G81ToD81', 'Convert-GxMToDxM',
+               'Convert-G80resp82ToDxx', 'Update-G64ToDoubleSided',
+               'Find-ErrorsInDxx', 'Convert-G81ToD81', 'Convert-GxMToDxM',
+               'Get-C64CarFromCommodoreFSProvider',
+               'Mount-FloppyDiskImage',  'Dismount-FloppyDiskImage'
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
-CmdletsToExport = 'Convert-FloppyDiskImage', 'Export-FloppyDiskImage', 
-               'Get-FloppyDiskImage', 'New-FloppyDiskImageConfiguration', 
+CmdletsToExport = 'Convert-FloppyDiskImage', 'Export-FloppyDiskImage',
+               'Get-FloppyDiskImage', 'New-FloppyDiskImageConfiguration',
                'Update-FloppyDiskImage', 'Update-FloppyDiskImageConfiguration',
                'New-FloppyDiskTemplate', 'Read-FloppyDiskImageTrack',
-               'function Find-ErrorsInDxx',
-               'Convert-G64resp71ToDxx', 'Convert-G81ToD81', 'Convert-GxMToDxM',
-               'Convert-G80resp82ToDxx', 'Update-G64ToDoubleSided'
+               'Enable-IECDevice', 'Expand-C64CarFile', 'Expand-C64OSInstaller',
+               'Export-C64Carfile', 'Export-C64OSCarfile', 'Export-FloppyDiskImage',
+               'Get-C64CarArchive', 'Get-C64CMDPartition', 'Get-C64CMDPartition',
+               'Get-C64DHDPartitions', 'Get-C64FDPartitions',
+               'Get-C64OSRestore', 'Merge-C64OSUpdate', 
+               'New-C64CarArchive', 'New-C64CarArchiveDate', 
+               'Set-C64CMDPartition', 'Update-C64CarArchive'
+
 
 # Variables to export from this module
 VariablesToExport = '*'
 
 # Aliases to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no aliases to export.
-AliasesToExport = '*'
+AliasesToExport = @()
 
 # DSC resources to export from this module
 # DscResourcesToExport = @()
