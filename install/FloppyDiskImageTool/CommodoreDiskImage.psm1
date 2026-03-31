@@ -687,6 +687,7 @@ function New-C64CarDirectoryNode {
 
     $dir.filename = [CommodoreDisk.Archive.car.carFilename]::new()
     if ( $null -ne $Context.Item.directoryEntry ) {
+       $dir.date = $Context.Item.directoryEntry.DateTime
        $dir.filename.asByteArray = $Context.Item.directoryEntry.filename
        if ($Context.Item.isTopdeskSubdir) { $dir.type = [byte][char]'T' }
     } else {
@@ -712,9 +713,8 @@ function Add-C64CarLeafNode {
     }
 
     $file = [CommodoreDisk.Archive.car.carFile]::new()
-### FIXME
     $file.type = ($Context.Item.directoryEntry.filename.ToUpper())[-3]
-
+    $file.date = $Context.Item.directoryEntry.DateTime
     $file.filename = [CommodoreDisk.Archive.car.carFilename]::new()
     $file.filename.asByteArray = $Context.Item.directoryEntry.filename
 
@@ -784,7 +784,7 @@ function Get-C64CarFromCommodoreFSProvider {
 
 
 
-function Mount-FloppyDiskImage {
+function Mount-FloppyDiskImageOld {
     param(
         [Parameter(Mandatory=$true, Position=0)]
         [string]$ImagePath,
@@ -832,6 +832,138 @@ function Mount-FloppyDiskImage {
     Write-Host "Mounted $ImagePath as $DriveName`: ($mode)"
 }
 
+function Mount-FloppyDiskImage {
+    [CmdletBinding(DefaultParameterSetName = "Mount")]
+    param(
+        # --- Mount existing image ---
+        [Parameter(Mandatory=$true, Position=0, ParameterSetName="Mount")]
+        [string]$ImagePath,
+
+        [Parameter(Position=2, ParameterSetName="Mount")]
+        [int]$Partition = -1,
+
+        # --- Create new image ---
+        [Parameter(Mandatory=$true, ParameterSetName="Create")]
+        [ValidateSet("D64","D71","D81","DNP")]
+        [string]$SectorImageType,
+
+        [Parameter(ParameterSetName="Create")]
+        [int]$NoTracks = 35,
+
+        [Parameter(Mandatory=$false, ParameterSetName="Create")]
+        $DiskName,
+
+        [Parameter(ParameterSetName="Create")]
+        $DiskID,
+
+        # --- Shared ---
+        [Parameter(Mandatory=$true, ParameterSetName="Create" )]
+        [Parameter(Mandatory=$true, Position=1, ParameterSetName="Mount" )]
+        [string]$DriveName,
+
+        [Parameter(ParameterSetName="Create" )]
+        [Parameter(ParameterSetName="Mount" )]
+        [switch]$rw,
+
+        [Parameter(ParameterSetName="Create" )]
+        [Parameter(ParameterSetName="Mount" )]
+        [switch]$UseTopdeskFolder,
+        
+        [Parameter(ParameterSetName="Create" )]
+        [Parameter(ParameterSetName="Mount" )]
+        [switch]$UseCVT
+    )
+
+    # -----------------------------
+    # Filesystem erzeugen / laden
+    # -----------------------------
+if ($PSCmdlet.ParameterSetName -eq "Create") {
+    Write-Verbose "Creating new $SectorImageType image..."
+
+    # -----------------------------
+    # Get-FloppyDiskImage splatting
+    # -----------------------------
+    $getParams = @{
+        SectorImage      = $true
+        SectorImageType  = $SectorImageType
+        Clear            = $true
+        ReturnFilesystem = $true
+    }
+
+    if ($PSBoundParameters.ContainsKey("NoTracks")) {
+        $getParams["NoTracks"] = $NoTracks
+    }
+
+    $fs = Get-FloppyDiskImage @getParams
+
+    # -----------------------------
+    # Update-FloppyDiskImage splatting
+    # -----------------------------
+    $updateParams = @{
+        Format      = $true
+        CommodoreFS = $fs
+    }
+
+    if ($PSBoundParameters.ContainsKey("DiskName")) {
+        $updateParams["DiskName"] = $DiskName
+    }
+
+    if ($PSBoundParameters.ContainsKey("DiskID")) {
+        $updateParams["DiskID"] = $DiskID
+    }
+
+    Update-FloppyDiskImage @updateParams
+
+    $filesystem = $fs
+    $ImagePath = "[new $SectorImageType image]"
+} else {
+        if ($Partition -gt 0) {
+            $partitionTable = Get-FloppyDiskImage `
+                -SectorImage `
+                -UseFactory `
+                -ReturnPartitionTable `
+                -Filename $ImagePath
+
+            $filesystem = Get-FloppyDiskImage `
+                -Partition $partitionTable[$Partition] `
+                -ReturnFilesystem
+        } else {
+            $filesystem = Get-FloppyDiskImage `
+                -SectorImage `
+                -UseFactory `
+                -ReturnFilesystem `
+                -Filename $ImagePath
+        }
+    }
+
+    # -----------------------------
+    # Root-Pfad
+    # -----------------------------
+    $root = if ($IsWindows) { "\" } else { "/" }
+    
+    # Provider wählen
+    $provider = if ($rw) { "CommodoreFSWritableProvider" } else { "CommodoreFSProvider" }
+
+    $moreParams = @{}
+    if ($UseTopdeskFolder) { $moreParams["UseTopdeskFolder"] = $true }
+    if ($UseCVT) { $moreParams["UseCVT"] = $true }
+
+    # -----------------------------
+    # PSDrive erstellen
+    # -----------------------------
+    New-PSDrive `
+        -Name $DriveName `
+        -PSProvider $provider `
+        -Root $root `
+        -Filesystem $filesystem `
+        -Scope Global `
+        @moreParams
+    
+    $mode = if ($rw) { "read-write" } else { "read-only" }
+
+    Write-Host "Mounted $ImagePath as $DriveName`: ($mode)"
+}
+
 function Dismount-FloppyDiskImage {
     param(
         [Parameter(Mandatory=$true, Position=0)]
@@ -858,4 +990,116 @@ function Dismount-FloppyDiskImage {
     }
     
     Write-Host "Dismounted $DriveName"
+}
+
+
+
+function Expand-CarArchiveToCommodoreFSWritableProvider {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true, Position = 0, ValueFromPipeline = $true)]
+        $CarArchive,
+        
+        [Parameter(Mandatory = $true, Position = 1)]
+        [string]$DestinationPath,
+        
+        [Parameter(Mandatory = $false)]
+        [switch]$Force,
+        
+        [Parameter(Mandatory = $false)]
+        [switch]$PreserveTimestamps,
+        
+        [Parameter(Mandatory = $false)]
+        [switch]$WhatIf
+    )
+    
+    process {
+        # Rekursive Funktion zum Expandieren
+        function Expand-Node {
+            param(
+                [CommodoreDisk.Archive.car.carfileOrDir]$Node,
+                [string]$CurrentPath
+            )
+            
+            # Dateinamen aus dem CAR-Objekt holen
+            $filename = $Node.filename.asUltimateFilename
+            
+            $filename += $Node.typeAsExtension
+            
+            $fullPath = Join-Path $CurrentPath $filename
+            
+            if ($Node -is [CommodoreDisk.Archive.car.carDirectory]) {
+                # Kind des Verzeichnisses bestimmen (normal oder TopdeskFolder)
+                $kind = "Directory"
+                if ($Node.type -eq [byte][char]'T') {
+                    $kind = "TopdeskFolder"
+                }
+                
+                # Verzeichnis anlegen
+                if (-not $WhatIf) {
+                    if (-not (Test-Path $fullPath)) {
+                        $params = @{
+                            Path = $fullPath
+                            Kind = $kind
+                        }
+                        
+                        if ($PreserveTimestamps) {
+                            $params.Now = $true
+                        }
+                        
+                        New-Item @params
+                        Write-Verbose "Verzeichnis erstellt: $fullPath (Typ: $kind)"
+                    }
+                }
+                else {
+                    Write-Host "WhatIf: Verzeichnis würde erstellt: $fullPath (Typ: $kind)" -ForegroundColor Yellow
+                }
+                
+                # Kinder rekursiv expandieren
+                foreach ($child in $Node.childs) {
+                    Expand-Node -Node $child -CurrentPath $fullPath
+                }
+            }
+            elseif ($Node -is [CommodoreDisk.Archive.car.carFile]) {
+                # Datei mit Inhalt anlegen
+                if (-not $WhatIf) {
+                    if ($Force -or -not (Test-Path $fullPath)) {
+                        $contentAsObjectArray = [object[]]$Node.content
+                        
+                        $params = @{
+                            Path = $fullPath
+                            Kind = "File"
+                            Value = $contentAsObjectArray
+                        }
+                        
+                        if ($PreserveTimestamps) {
+                            $params.Now = $true
+                        }
+                        
+                        New-Item @params
+                        Write-Verbose "Datei erstellt: $fullPath ($($Node.content.Length) Bytes)"
+                    }
+                    else {
+                        Write-Warning "Datei existiert bereits: $fullPath (verwenden Sie -Force zum Überschreiben)"
+                    }
+                }
+                else {
+                    Write-Host "WhatIf: Datei würde erstellt: $fullPath ($($Node.content.Length) Bytes)" -ForegroundColor Yellow
+                }
+            }
+        }
+        
+        # Prüfen ob Zielpfad existiert
+        if (-not (Test-Path $DestinationPath)) {
+            if (-not $WhatIf) {
+                New-Item -Path $DestinationPath -ItemType Directory -Force | Out-Null
+            }
+            else {
+                Write-Host "WhatIf: Zielverzeichnis würde erstellt: $DestinationPath" -ForegroundColor Yellow
+            }
+        }
+        
+        # Expansion starten
+        Expand-Node -Node $CarArchive.car.child -CurrentPath $DestinationPath
+    }
 }
