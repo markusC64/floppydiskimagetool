@@ -550,7 +550,8 @@ function Invoke-RecursiveItemWalkInternal {
             $content = Get-Content -LiteralPath $Path -ErrorAction Stop
         }
         catch {
-            Write-Debug ("{0}Get-Content failed for '{1}': {2}" -f $indent, $Path, $_.Exception.Message)
+            Write-Error ("{0}Get-Content failed for '{1}': {2}" -f $indent, $Path, $_.Exception.Message)
+            $content = @();
         }
 
         if ($OnLeaf) {
@@ -713,7 +714,7 @@ function Add-C64CarLeafNode {
     }
 
     $file = [CommodoreDisk.Archive.car.carFile]::new()
-    $file.type = ($Context.Item.directoryEntry.filename.ToUpper())[-3]
+    $file.type = [byte][char] (($Context.Item.Name.ToUpper())[-3])
     $file.date = $Context.Item.directoryEntry.DateTime
     $file.filename = [CommodoreDisk.Archive.car.carFilename]::new()
     $file.filename.asByteArray = $Context.Item.directoryEntry.filename
@@ -776,61 +777,13 @@ function Get-C64CarFromCommodoreFSProvider {
         $archive.child     = $resultContainer.Value.childs[0]
         # return $archive
         
-        $c64 = [CommodoreDisk.Archive.car.C64Car]::new()
+        $c64 = [C64OSTool.C64Car]::new()
         $c64.car = $archive
         return $c64
     }
 }
 
 
-
-function Mount-FloppyDiskImageOld {
-    param(
-        [Parameter(Mandatory=$true, Position=0)]
-        [string]$ImagePath,
-        
-        [Parameter(Mandatory=$true, Position=1)]
-        [string]$DriveName,
-        
-        [Parameter(Position=2)]
-        [int]$Partition = -1,
-        
-        [Parameter()]
-        [switch]$rw,
-
-        [Parameter()]
-        [switch]$UseTopdeskFolder,
-        
-        [Parameter()]
-        [switch]$UseCVT
-
-    )
-    
-    # Filesystem laden
-    if ($Partition -gt 0) {
-        $partitionTable = Get-FloppyDiskImage -sectorimage -useFactory -returnPartitionTable -Filename $ImagePath
-        $filesystem = Get-FloppyDiskImage -Partition $partitionTable[$Partition] -returnFilesystem
-    } else {
-        $filesystem = Get-FloppyDiskImage -sectorimage -useFactory -returnFilesystem -Filename $ImagePath
-    }
-    
-    # Root-Pfad
-    $root = if ($IsWindows) { "\" } else { "/" }
-    
-    # Provider wählen
-    $provider = if ($rw) { "CommodoreFSWritableProvider" } else { "CommodoreFSProvider" }
-
-    $moreParams = @{}
-    if ($UseTopdeskFolder) { $moreParams.Add("UseTopdeskFolder", $true) }
-    if ($UseCVT) { $moreParams.Add("UseCVT", $true) }
-
-
-    # PSDrive erstellen
-    New-PSDrive -Name $DriveName -PSProvider $provider -Root $root -Filesystem $filesystem -Scope Global @moreParams
-    
-    $mode = if ($rw) { "read-write" } else { "read-only" }
-    Write-Host "Mounted $ImagePath as $DriveName`: ($mode)"
-}
 
 function Mount-FloppyDiskImage {
     [CmdletBinding(DefaultParameterSetName = "Mount")]

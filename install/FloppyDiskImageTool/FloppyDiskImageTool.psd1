@@ -70,11 +70,18 @@ NestedModules = @('CommodoreDiskImageTool.dll')
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
 FunctionsToExport = 'function Find-ErrorsInDxx', 'Update-G64ToDoubleSided',
-               'Convert-G64resp71ToDxx', 'Convert-G81ToD81', 'Convert-GxMToDxM',
-               'Convert-G80resp82ToDxx', 'Update-G64ToDoubleSided',
-               'Find-ErrorsInDxx', 'Convert-G81ToD81', 'Convert-GxMToDxM',
-               'Get-C64CarFromCommodoreFSProvider', 'Expand-CarArchiveToCommodoreFSWritableProvider',
-               'Mount-FloppyDiskImage',  'Dismount-FloppyDiskImage'
+               'Convert-G64resp71ToDxx', 'Convert-G81ToD81', 
+               'Convert-GxMToDxM', 'Convert-G80resp82ToDxx', 
+               'Update-G64ToDoubleSided',  'Get-C64CarFromCommodoreFSProvider',
+               'Expand-CarArchiveToCommodoreFSWritableProvider',
+               'Mount-FloppyDiskImage',  'Dismount-FloppyDiskImage',
+               # Internal helpers, no idea why I have to export them:
+               'Get-DriveQualifiedPath', 'Invoke-RecursiveItemWalkInternal',
+               'Invoke-RecursiveItemWalk', 'New-CarDateTimeNow',
+               'New-C64CarRootCollector', 'New-C64CarDirectoryNode',
+               'Add-C64CarLeafNode', 'Complete-C64CarDirectoryNode',
+               'New-CarDateTimeNow', 'Invoke-RecursiveItemWalk',
+               'New-C64CarRootCollector', 'New-C64CarDirectoryNode'
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = 'Convert-FloppyDiskImage', 'Export-FloppyDiskImage',
@@ -84,7 +91,8 @@ CmdletsToExport = 'Convert-FloppyDiskImage', 'Export-FloppyDiskImage',
                'Enable-IECDevice', 'Expand-C64CarFile', 'Expand-C64OSInstaller',
                'Export-C64Carfile', 'Export-C64OSCarfile', 'Export-FloppyDiskImage',
                'Get-C64CarArchive', 'Get-C64CMDPartition', 'Get-C64CMDPartition',
-               'Get-C64DHDPartitions', 'Get-C64FDPartitions',
+               'Get-C64DHDPartitions', 'Get-C64FDPartitions', 'Get-C64RLPartitions',
+               'Get-C64RLXLPartitions',
                'Get-C64OSRestore', 'Merge-C64OSUpdate', 
                'New-C64CarArchive', 'New-C64CarArchiveDate', 
                'Set-C64CMDPartition', 'Update-C64CarArchive'
