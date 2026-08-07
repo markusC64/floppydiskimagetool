@@ -12,7 +12,7 @@
 RootModule = 'CommodoreDiskImage.psm1'
 
 # Version number of this module.
-ModuleVersion = '0.0.2'
+ModuleVersion = '0.0.3'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -75,6 +75,7 @@ FunctionsToExport = 'function Find-ErrorsInDxx', 'Update-G64ToDoubleSided',
                'Update-G64ToDoubleSided',  'Get-C64CarFromCommodoreFSProvider',
                'Expand-CarArchiveToCommodoreFSWritableProvider',
                'Mount-FloppyDiskImage',  'Dismount-FloppyDiskImage',
+               'Mount-C64CarFile', 'Dismount-C64Carfile',
                # Internal helpers, no idea why I have to export them:
                'Get-DriveQualifiedPath', 'Invoke-RecursiveItemWalkInternal',
                'Invoke-RecursiveItemWalk', 'New-CarDateTimeNow',

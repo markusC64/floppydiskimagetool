@@ -1056,3 +1056,112 @@ function Expand-CarArchiveToCommodoreFSWritableProvider {
         Expand-Node -Node $CarArchive.car.child -CurrentPath $DestinationPath
     }
 }
+
+function Mount-C64CarFile {
+    [CmdletBinding(DefaultParameterSetName = "Mount")]
+    param(
+        # --- Mount existing CAR ---
+        [Parameter(Mandatory=$true, Position=0, ParameterSetName="Mount")]
+        [string]$Path,
+
+        # --- Create new CAR ---
+        [Parameter(Mandatory=$true, ParameterSetName="Create")]
+        [ValidateSet("general", "restore", "install")]
+        [string]$CarType = "general",
+
+        [Parameter(Mandatory=$true, ParameterSetName="Create")]
+        [byte]$Version = 2,
+
+        [Parameter(ParameterSetName="Create")]
+        $Date,
+
+        [Parameter(ParameterSetName="Create")]
+        [string]$NotesASCII = "",
+
+        # --- Create new CAR ---
+        [Parameter(Mandatory=$true, ParameterSetName="FromCar")]
+        $carArchive,
+
+        # --- Shared ---
+        [Parameter(Mandatory=$true, Position=1)]
+        [string]$DriveName,
+
+        [Parameter()]
+        [switch]$rw
+    )
+
+    # -----------------------------
+    # CAR laden oder erstellen
+    # -----------------------------
+    if ($PSCmdlet.ParameterSetName -eq "FromCar") {
+       $car = $carArchive
+    }
+    elseif ($PSCmdlet.ParameterSetName -eq "Create") {
+        Write-Verbose "Creating new CAR archive (type: $CarType, version: $Version)..."
+        
+        # Wenn kein Datum übergeben, jetzt nehmen
+        if (-not $Date) {
+            $Date = New-C64CarArchiveDate -Now
+        }
+        
+        # Wenn keine Notiz übergeben, Standard setzen
+        if ([string]::IsNullOrEmpty($NotesASCII)) {
+            $NotesASCII = "CAR Archive created via Mount-C64CarFile"
+        }	
+        
+        $car = New-C64CarArchive -CarType $CarType -Version $Version -Date $Date -NotesASCII $NotesASCII
+        $Path = "[new CAR archive]"
+    } else {
+        Write-Verbose "Loading CAR archive from '$Path'..."
+        $car = Get-C64CarArchive -Path $Path
+    }
+
+    # -----------------------------
+    # Provider wählen
+    # -----------------------------
+    $provider = if ($rw) { "CarFSWritableProvider" } else { "CarFSProvider" }
+    $root = if ($IsWindows) { "\" } else { "/" }
+
+    # -----------------------------
+    # PSDrive erstellen
+    # -----------------------------
+    New-PSDrive `
+        -Name $DriveName `
+        -PSProvider $provider `
+        -Root $root `
+        -Archive $car `
+        -Scope Global
+
+    $mode = if ($rw) { "read-write" } else { "read-only" }
+    Write-Host "Mounted CAR archive '$Path' as $DriveName`: ($mode)"
+}
+
+function Dismount-C64Carfile {
+    param(
+        [Parameter(Mandatory=$true, Position=0)]
+        [string]$DriveName,
+        
+        [Parameter()]
+        [string]$SaveAs
+    )
+    
+    $drive = Get-PSDrive -Name $DriveName -ErrorAction SilentlyContinue
+    if (-not $drive) {
+        Write-Error "Drive $DriveName not found"
+        return
+    }
+    
+    $image = $drive.Archive
+
+    # Erst PSDrive entfernen, damit es garatiert niemand mehr ändern kann:
+    Remove-PSDrive -Name $DriveName
+    
+    # Änderungen speichern
+    if ($SaveAs) {
+        $wrapper = [C64OSTool.C64Car]::new()
+        $wrapper.car = $image
+        $wrapper | Export-C64CarFile -Path $SaveAs
+    }
+    
+    Write-Host "Dismounted $DriveName"
+}
