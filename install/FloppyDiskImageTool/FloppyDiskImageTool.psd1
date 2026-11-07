@@ -93,10 +93,12 @@ CmdletsToExport = 'Convert-FloppyDiskImage', 'Export-FloppyDiskImage',
                'Export-C64Carfile', 'Export-C64OSCarfile', 'Export-FloppyDiskImage',
                'Get-C64CarArchive', 'Get-C64CMDPartition', 'Get-C64CMDPartition',
                'Get-C64DHDPartitions', 'Get-C64FDPartitions', 'Get-C64RLPartitions',
-               'Get-C64RLXLPartitions',
+               'Get-C64RLXLPartitions', 'Convert-GeoWriteToMegaAssemblerSource',
+               'Convert-GeoWriteToText', 'Test-GeoWrite',
                'Get-C64OSRestore', 'Merge-C64OSUpdate', 
                'New-C64CarArchive', 'New-C64CarArchiveDate', 
-               'Set-C64CMDPartition', 'Update-C64CarArchive'
+               'Set-C64CMDPartition', 'Update-C64CarArchive',
+               'Get-CVT'
 
 
 # Variables to export from this module
